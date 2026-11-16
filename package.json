@@ -1,0 +1,14 @@
+{
+  "name": "tide-ark",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "潮汐方舟 — Rokid Glasses AIUI 末世漂流生存小游戏",
+  "scripts": {
+    "test": "node --test tests/game.test.mjs",
+    "preview": "node tools/serve.mjs"
+  },
+  "devDependencies": {
+    "pngjs": "^7.0.0"
+  }
+}

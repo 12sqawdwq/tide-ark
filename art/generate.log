@@ -1,0 +1,197 @@
+2026-11-16T16:44:26.404Z OK   icon-03 (40s, exit 0)
+2026-11-16T16:45:26.907Z OK   shelter-lv1-front (48s, exit 0)
+2026-11-16T16:46:05.577Z OK   shelter-lv1-front (55s, exit 0)
+2026-11-16T16:46:30.596Z OK   shelter-lv5-front (63s, exit 0)
+2026-11-16T16:46:58.224Z OK   shelter-lv5-front (52s, exit 0)
+2026-11-16T16:47:31.566Z OK   filter-lv3-front (60s, exit 0)
+2026-11-16T16:47:48.216Z OK   filter-lv3-front (49s, exit 0)
+2026-11-16T16:48:18.297Z OK   eel-lv2-front (46s, exit 0)
+2026-11-16T16:48:32.617Z OK   eel-lv2-front (44s, exit 0)
+2026-11-16T16:49:02.565Z OK   chest-iron-closed (44s, exit 0)
+2026-11-16T16:49:17.734Z OK   chest-iron-closed (45s, exit 0)
+2026-11-16T16:49:57.548Z OK   salvage-01 (54s, exit 0)
+2026-11-16T16:50:04.922Z OK   salvage-01 (47s, exit 0)
+2026-11-16T16:50:44.875Z OK   char-01 (47s, exit 0)
+2026-11-16T16:50:55.250Z OK   char-01 (50s, exit 0)
+2026-11-16T16:51:26.367Z OK   char-01 (53s, exit 0)
+2026-11-16T16:51:37.354Z OK   char-24 (52s, exit 0)
+2026-11-16T16:51:46.234Z OK   char-24 (50s, exit 0)
+2026-11-16T16:52:14.117Z OK   char-24 (47s, exit 0)
+2026-11-16T16:52:39.783Z OK   ruins-01 (53s, exit 0)
+2026-11-16T16:52:47.869Z OK   ruins-01 (70s, exit 0)
+2026-11-16T16:52:59.755Z OK   ruins-01 (45s, exit 0)
+2026-11-16T16:56:07.515Z OK   sheet-01 (89s, exit 0)
+2026-11-16T16:56:07.875Z CROP sheet-01 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T16:57:52.597Z OK   sheet-02 (85s, exit 0)
+2026-11-16T16:59:26.573Z OK   sheet-03 (93s, exit 0)
+2026-11-16T17:00:44.244Z OK   sheet-04 (77s, exit 0)
+2026-11-16T17:01:58.098Z OK   sheet-05 (73s, exit 0)
+2026-11-16T17:02:59.638Z OK   sheet-06 (61s, exit 0)
+2026-11-16T17:04:00.221Z FAIL sheet-07 (60s, exit 3221226505)
+de landscape vignette: wind arrows over a choppy sea with a pennant
+12. wide landscape vignette: a tidal gauge pole half submerged
+13. wide landscape vignette: calm water reflecting clouds
+14. the survivor casting a grappling hook
+15. the survivor hammering a plank
+16. the survivor rowing a small boat
+2026-11-16T17:03:01.608508Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+codex
+I’ll generate one sheet and save it to the specified PNG path.
+memory allocation of 134217728 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:04:02.250Z FAIL sheet-08 (2s, exit 3221226505)
+ any numbers or captions.
+Cells in reading order (left to right, then top to bottom):
+1. the survivor looking through binoculars
+2. the survivor drinking from a canteen
+3. the survivor sleeping in a hammock
+4. the survivor opening a crate with a crowbar
+5. the survivor turning a filter pump crank
+6. the survivor cheering with both arms up
+7. an elderly mechanic survivor with goggles and a tool belt
+8. a young scout survivor with a backpack and whistle
+9. a radio operator survivor with headphones
+10. a cook survivor stirring a pot
+11. a stray dog on a floating plank
+12. a cat sitting on an oil drum
+13. a seagull holding a fish
+14. a pelican
+15. a sea turtle
+16. a jellyfish
+memory allocation of 350464 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:04:02.404Z FAIL sheet-09 (0s, exit 3221225725)
+
+thread '<unknown>' (219512) has overflowed its stack
+
+2026-11-16T17:04:02.448Z FAIL sheet-10 (0s, exit 1)
+The system cannot execute the specified program.
+
+2026-11-16T17:04:02.518Z FAIL sheet-11 (0s, exit 1)
+The system cannot execute the specified program.
+
+2026-11-16T17:04:56.408Z CROP sheet-01 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:04:56.652Z CROP sheet-02 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:04:56.868Z CROP sheet-03 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:04:57.072Z CROP sheet-04 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:04:57.273Z CROP sheet-05 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:04:57.470Z CROP sheet-06 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:05:09.600Z FAIL sheet-11 (0s, exit 3221226505)
+memory allocation of 3079803 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:09.670Z FAIL sheet-09 (0s, exit 3221226505)
+memory allocation of 3702784 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:09.730Z FAIL sheet-08 (0s, exit 3221226505)
+memory allocation of 3079803 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:09.745Z FAIL sheet-10 (0s, exit 3221226505)
+memory allocation of 262144 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:10.023Z FAIL sheet-13 (0s, exit 3221226505)
+memory allocation of 14811136 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:10.092Z FAIL sheet-12 (0s, exit 3221226505)
+memory allocation of 98304 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:05:10.157Z FAIL sheet-14 (0s, exit 3221226505)
+memory allocation of 14811136 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:07:11.086Z OK   sheet-07 (81s, exit 0)
+2026-11-16T17:07:51.794Z FAIL sheet-08 (40s, exit 3221226505)
+ goggles and a tool belt
+8. a young scout survivor with a backpack and whistle
+9. a radio operator survivor with headphones
+10. a cook survivor stirring a pot
+11. a stray dog on a floating plank
+12. a cat sitting on an oil drum
+13. a seagull holding a fish
+14. a pelican
+15. a sea turtle
+16. a jellyfish
+2026-11-16T17:07:15.712610Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+codex
+I’ll generate the sheet and save it to the specified PNG path.
+
+memory allocation of 1127896 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:16.568Z FAIL sheet-09 (24s, exit 3221226505)
+ icon: coiled eel, thick simple strokes, fits a circle
+14. a single minimal UI pictogram icon: hammer, thick simple strokes, fits a circle
+15. a single minimal UI pictogram icon: wrench, thick simple strokes, fits a circle
+16. a single minimal UI pictogram icon: hook, thick simple strokes, fits a circle
+2026-11-16T17:07:54.705335Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.notion.com/.well-known/oauth-protected-resource/mcp\", scope=\"default\"" })
+codex
+I’ll generate one image and save it to the specified PNG path.
+memory allocation of 1111483 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:16.962Z FAIL sheet-10 (0s, exit 3221226505)
+
+thread 'tokio-rt-worker' (225676) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\starlark-0.14.2\src\collections\alloca.rs:42:37:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+memory allocation of 7405568 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:17.307Z FAIL sheet-11 (0s, exit 3221226505)
+memory allocation of 3079803 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:17.504Z FAIL sheet-12 (0s, exit 3221225725)
+
+thread 'tokio-rt-worker' (222660) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\starlark-0.14.2\src\collections\alloca.rs:42:37:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'tokio-rt-worker' (222660) has overflowed its stack
+
+2026-11-16T17:08:17.864Z FAIL sheet-13 (0s, exit 3221226505)
+memory allocation of 3079803 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:18.188Z FAIL sheet-14 (0s, exit 3221226505)
+
+thread 'tokio-rt-worker' (201936) panicked at C:\Users\runneradmin\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\starlark-0.14.2\src\collections\alloca.rs:42:37:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+memory allocation of 3079803 bytes failed
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+2026-11-16T17:08:18.443Z CROP sheet-01 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:18.542Z CROP sheet-02 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:18.617Z CROP sheet-03 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:18.689Z CROP sheet-04 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:18.758Z CROP sheet-05 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:18.825Z CROP sheet-06 1254x1254 网格线 x3/y3 → 0 张
+2026-11-16T17:08:19.050Z CROP sheet-07 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:17:52.225Z OK   sheet-08 (75s, exit 0)
+2026-11-16T17:19:17.858Z OK   sheet-09 (73s, exit 0)
+2026-11-16T17:20:07.308Z OK   sheet-10 (49s, exit 0)
+2026-11-16T17:21:14.691Z OK   sheet-11 (67s, exit 0)
+2026-11-16T17:22:36.709Z OK   sheet-12 (82s, exit 0)
+2026-11-16T17:23:53.723Z OK   sheet-13 (77s, exit 0)
+2026-11-16T17:24:45.012Z OK   sheet-14 (51s, exit 0)
+2026-11-16T17:25:02.878Z CROP sheet-08 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:16.671Z CROP sheet-09 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:16.876Z CROP sheet-10 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:17.062Z CROP sheet-11 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:17.284Z CROP sheet-12 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:17.490Z CROP sheet-13 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T17:25:17.614Z CROP sheet-14 1254x1254 网格线 x3/y3 → 7 张
+2026-11-16T17:45:08.657Z OK   sheet-15 (98s, exit 0)
+2026-11-16T17:45:09.399Z CROP sheet-15 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T18:18:05.778Z OK   sheet-16 (104s, exit 0)
+2026-11-16T18:19:12.115Z OK   sheet-17 (66s, exit 0)
+2026-11-16T18:19:29.594Z CROP sheet-16 1254x1254 网格线 x3/y3 → 16 张
+2026-11-16T18:19:29.720Z CROP sheet-17 1254x1254 网格线 x3/y3 → 4 张

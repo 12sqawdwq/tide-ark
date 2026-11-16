@@ -1,0 +1,8 @@
+{
+  "name": "tide-ark",
+  "version": "0.1.0",
+  "description": "潮汐方舟 — AIUI agent for Rokid Glasses",
+  "type": "module",
+  "main": "app.js",
+  "dependencies": {}
+}

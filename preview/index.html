@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>潮汐方舟 · Rokid Glasses 预览</title>
+<style>
+  body { margin: 0; min-height: 100vh; background: #111; color: #9a9a9a; font-family: system-ui, sans-serif;
+         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  #frame { width: 480px; height: 352px; position: relative; overflow: hidden; outline: 1px solid #333;
+           transform-origin: top center; background: #000; }
+  #frame.env-street { background: linear-gradient(160deg, #6b7b8c 0%, #3d4a3c 55%, #2b2b2b 100%); }
+  #frame.env-street .root { background-color: transparent !important; }
+  #frame.env-street .overlay { background-color: rgba(0,0,0,0) !important; }
+  /* AIUI 组件在浏览器中的近似 */
+  /* 用 :where() 保持零特异性，避免覆盖 .ink 中的类样式 */
+  :where(#frame) view { display: block; }
+  :where(#frame) row { display: flex; flex-direction: row; }
+  :where(#frame) column { display: flex; flex-direction: column; }
+  :where(#frame) text { display: inline-block; white-space: pre; }
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { background: #1d1d1d; color: #ccc; border: 1px solid #444; border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  button:hover { border-color: #40ff5e; color: #40ff5e; }
+  #log { font: 12px monospace; color: #6f6; min-height: 16px; }
+  .hint { font-size: 12px; color: #777; max-width: 520px; text-align: center; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div id="frame"></div>
+  <div class="controls">
+    <button data-key="ArrowUp">↑ 前滑 (ArrowUp)</button>
+    <button data-key="ArrowDown">↓ 后滑 (ArrowDown)</button>
+    <button data-key="Enter">● 单击 (Enter)</button>
+    <button data-key="Backspace">← 返回 (Backspace)</button>
+  </div>
+  <div class="controls">
+    <button id="env">切换环境：纯黑 / 街景</button>
+    <button id="fast">快进 10 秒</button>
+    <button id="reset">清空存档</button>
+  </div>
+  <div id="log"></div>
+  <p class="hint">键盘：↑ ↓ Enter Backspace（Esc 也可返回）。本预览直接加载 <code>agent/pages/index/index.ink</code> 的模板、脚本与样式，
+  用简化运行时模拟 AIUI；最终显示效果以 AIUI Studio 模拟器和真机为准。</p>
+  <script type="module" src="./sim.js"></script>
+</body>
+</html>

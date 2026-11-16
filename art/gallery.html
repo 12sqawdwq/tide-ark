@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>潮汐方舟 · 线稿图集</title>
+<style>
+  body { margin: 0; background: #111; color: #aaa; font: 13px system-ui, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; background: #111e; padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #333; }
+  header b { color: #ddd; font-size: 15px; }
+  button { background: #1d1d1d; color: #ccc; border: 1px solid #444; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button.on { border-color: #40ff5e; color: #40ff5e; }
+  #stat { margin-left: auto; color: #8c8; }
+  h2 { color: #ccc; font-size: 14px; margin: 18px 16px 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 0 16px; }
+  .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; padding: 6px; }
+  .pic { position: relative; aspect-ratio: 1; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 3px; }
+  .pic img { width: 100%; height: 100%; object-fit: contain; }
+  .pic .miss { color: #999; font-size: 12px; }
+  .id { color: #ddd; margin-top: 5px; font: 11px monospace; }
+  .sub { color: #777; font-size: 11px; line-height: 1.35; max-height: 3em; overflow: hidden; }
+  /* 眼镜模式：黑底 #40ff5e 线条（反相后乘以绿色） */
+  body.glass .pic { background: #000; }
+  body.glass .pic img { filter: invert(1); }
+  body.glass .pic::after { content: ''; position: absolute; inset: 0; background: #40ff5e; mix-blend-mode: multiply; pointer-events: none; }
+  body.small .grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  body.small .sub { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <b>潮汐方舟 · 线稿图集</b>
+  <button id="glass">眼镜单色绿</button>
+  <button id="small">小图（接近眼镜尺寸）</button>
+  <button id="missing">只看未生成</button>
+  <button id="reload">刷新</button>
+  <span id="stat"></span>
+</header>
+<main id="main"></main>
+<script type="module">
+const NAMES = { shelter: '庇护所', filter: '海水过滤器', 'eel-generator': '电鳗发电机', chest: '宝箱', salvage: '打捞物', sea: '海况', character: '角色与动物', icon: '界面图标', story: '剧情插画', ruins: '淹没废墟', event: '风暴事件' };
+const main = document.getElementById('main');
+let onlyMissing = false;
+async function load() {
+  const text = await (await fetch('./prompts.jsonl', { cache: 'no-store' })).text();
+  const items = text.trim().split('\n').map((l) => JSON.parse(l));
+  const groups = {};
+  for (const x of items) (groups[x.category] ||= []).push(x);
+  main.replaceChildren();
+  let done = 0;
+  const bust = Date.now();
+  const pending = [];
+  for (const [cat, list] of Object.entries(groups)) {
+    const h = document.createElement('h2');
+    const grid = document.createElement('div'); grid.className = 'grid';
+    let catDone = 0;
+    for (const x of list) {
+      const card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = `<div class="pic"><img alt=""></div><div class="id">${x.id}</div><div class="sub"></div>`;
+      card.querySelector('.sub').textContent = x.subject;
+      const img = card.querySelector('img');
+      pending.push(new Promise((r) => {
+        img.onload = () => { done++; catDone++; h.textContent = `${NAMES[cat] || cat} · ${catDone}/${list.length}`; if (onlyMissing) card.hidden = true; r(); };
+        img.onerror = () => { img.replaceWith(Object.assign(document.createElement('span'), { className: 'miss', textContent: '生成中…' })); card.classList.add('missing'); r(); };
+      }));
+      img.src = `./lineart/${x.id}.png?v=${bust}`;
+      grid.appendChild(card);
+    }
+    h.textContent = `${NAMES[cat] || cat} · 0/${list.length}`;
+    main.append(h, grid);
+  }
+  await Promise.all(pending);
+  document.getElementById('stat').textContent = `已生成 ${done} / ${items.length}`;
+}
+const toggle = (id, cls) => document.getElementById(id).onclick = (e) => { document.body.classList.toggle(cls); e.target.classList.toggle('on'); };
+toggle('glass', 'glass'); toggle('small', 'small');
+document.getElementById('missing').onclick = (e) => {
+  onlyMissing = !onlyMissing; e.target.classList.toggle('on');
+  document.querySelectorAll('.card').forEach((c) => { c.hidden = onlyMissing && !c.classList.contains('missing'); });
+};
+document.getElementById('reload').onclick = load;
+load();
+</script>
+</body>
+</html>
