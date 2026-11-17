@@ -3,6 +3,12 @@
 // 支持 Page 生命周期 onLoad/onShow/onHide/onUnload、setData（含点路径）、onKeyDown/onKeyUp、wx 存储。
 
 import * as G from '../agent/core/game.js';
+import { SCENES } from './scenes.js';
+
+// ?scene=04-home-late 打开固定场景；再加 &shot=1 只留 480×352 画面（给 tools/shots.mjs 截图）
+const params = new URLSearchParams(location.search);
+const SCENE = params.get('scene');
+if (params.get('shot')) document.body.classList.add('shot');
 
 const INK_URL = new URL('../agent/pages/index/index.ink', import.meta.url).href;
 const frame = document.getElementById('frame');
@@ -164,7 +170,18 @@ async function mount() {
   window.__page = page; // 调试用
   page.onLoad && page.onLoad({});
   page.onShow && page.onShow();
+  if (SCENE) {
+    // 截图模式：换成固定场景，冻结时间，不写存档
+    const found = SCENES.find(([name]) => name === SCENE);
+    if (!found) { log('没有这个场景：' + SCENE); return; }
+    page.stopLoops();
+    page.save = () => {};
+    page.state = found[2](G);
+    page.render();
+    log(`场景 ${found[0]} · ${found[1]}`);
+  }
   render();
+  if (SCENE) requestAnimationFrame(() => { document.body.dataset.ready = '1'; });
 }
 
 function unmount() {

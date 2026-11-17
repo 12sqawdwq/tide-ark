@@ -226,7 +226,12 @@ function beat(s, id) {
 // 没有弹窗、不在打捞中、不在撬锁中时，弹出下一个剧情
 function flushStory(s) {
   const ui = s.ui;
-  if (ui.overlay || ui.salvage || (ui.chest && !ui.chest.reward) || !s.queue.length) return;
+  if (ui.overlay || ui.salvage || (ui.chest && !ui.chest.reward)) return;
+  if (!s.queue.length) {
+    // 剧情都播完后，再报派遣归来
+    if (s.returns && s.returns.length) ui.overlay = returnOverlay(s.returns.shift());
+    return;
+  }
   const id = s.queue.shift();
   if (id === 'choice') { ui.overlay = choiceOverlay(); return; }
   const st = storyOf(id);
@@ -292,6 +297,113 @@ export function diveLab(s) {
   return true;
 }
 export const residents = (s) => Object.keys(s.npc).length;
+
+// ---------- 居民：派遣与聊天（docs/交互设计.md） ----------
+// 派遣：居民替你出海，DISPATCH_SECS 游戏秒后带回 2 件（擅长海域 +1，好感 ≥3 再 +1）。
+// 收获只由掉落表决定；大模型（若可用）只负责把汇报/闲聊说得更像这个人，见 index.ink。
+export const DISPATCH_SECS = 40;
+export const DISPATCH_WATER = 2; // 口粮
+export const BOND_MAX = 5;
+export const CREW = {
+  rivet: { art: 'npc-02', zone: 'wreck', voice: 'male-qn-qingse', persona: '机械师，被城邦冤枉弄坏配给阀，嘴硬手巧，爱拆东西',
+    lines: ['钉子要斜着进才咬得住。', '配给阀是自己漏的，真的。', '捞到铜线留给我。'], warn: '今晚潮大，我再钉一遍补丁。', back: '能用的都拆回来了。' },
+  coral: { art: 'npc-04', zone: 'near', voice: 'female-tianmei', persona: '海洋生物学者，心疼被改造的电鳗，说话温和、爱记笔记',
+    lines: ['电鳗今天电压很稳。', '笔记又潮了，还看得清。', '海在变，我们也在变。'], warn: '海鸟往南飞了，今晚小心。', back: '顺手记了三种新藻类。' },
+  pot: { art: 'npc-07', zone: 'near', voice: 'clever_boy', persona: '被赶出后厨的年轻厨子，胆小、乐观、三句不离吃',
+    lines: ['今晚海藻汤，明晚也是。', '水省着喝，汤可以淡点。', '锅底刻的日子快满了。'], warn: '锅都绑好了，晚饭照开。', back: '带了点能下锅的。' },
+  beam: { art: 'npc-11', zone: 'wreck', voice: 'male-qn-jingying', persona: '沉默的建筑工，话极少，只相信量过三遍的数字',
+    lines: ['地基还能再加一层。', '钢梁不说谎。', '量三遍，钉一遍。'], warn: '今晚的潮，防御差一点。', back: '梁是好梁，扛回来了。' },
+  hawk: { art: 'npc-03', zone: 'wreck', voice: 'Chinese (Mandarin)_Radio_Host', persona: '木腿老司机，骑大海龟认路，爱讲旧世界的事',
+    lines: ['这底下原来是高速公路。', '海龟比车好，不用加油。', '残骸带楼顶还没捞完。'], warn: '起浪了，海龟不肯出来。', back: '老路还认得。' },
+  rust: { art: 'npc-05', zone: 'sunken', voice: 'female-yujie', persona: '前海盗船长，被城邦逼上黑帆，冷静、讲约定',
+    lines: ['白砂的章，我也挨过。', '黑帆收了，刀还磨着。', '海上没规则，只有约定。'], warn: '今晚风大，我守夜。', back: '顺路吓跑了两条小船。' },
+  bubble: { art: 'npc-08', zone: 'sunken', voice: 'lovely_girl', persona: '被打捞公司丢在海底的潜水员，安静，熟悉沉城每一条路',
+    lines: ['下面比上面安静。', '铜盔里能听见心跳。', '沉城的路我闭眼也认得。'], warn: '今晚别下水，它们会醒。', back: '下面的门又开了一扇。' },
+};
+export const crewOf = (s) => Object.keys(CREW).filter((k) => s.npc[k]);
+const bondOf = (s, k) => s.bond[k] || 0;
+const addBond = (s, k) => { s.bond[k] = Math.min(BOND_MAX, bondOf(s, k) + 1); };
+const hearts = (b) => '♥'.repeat(b) + '♡'.repeat(BOND_MAX - b);
+export const dispatchSize = (s, k, zone) => 2 + (CREW[k].zone === zone ? 1 : 0) + (bondOf(s, k) >= 3 ? 1 : 0);
+const lootZones = (s) => zonesOf(s).filter((z) => ZONES[z].loot);
+// 居民页的动作：每个可去的海域一行 + 聊聊
+function mateMenu(s) { return [...lootZones(s), 'talk']; }
+
+export function dispatch(s, k, zone) {
+  if (!s.npc[k] || !CREW[k]) return false;
+  if (s.crew[k]) { s.ui.msg = `${NPC[k]}还在海上。`; return false; }
+  if (!lootZones(s).includes(zone)) return false;
+  if (s.res.water < DISPATCH_WATER) { s.ui.msg = `口粮不够：需要 ${SYM.water}${DISPATCH_WATER}。`; return false; }
+  s.res.water -= DISPATCH_WATER;
+  s.crew[k] = { zone, left: DISPATCH_SECS };
+  s.ui.msg = `${NPC[k]}出发去${ZONES[zone].label}了。`;
+  return true;
+}
+
+// 派遣不会捞到剧情物；巨鲨=丢一件，漂流瓶照常轮换台词
+const DISPATCH_KINDS = new Set(['scrap', 'bottle', 'part', 'chest', 'eel', 'weed', 'letter', 'shark']);
+function crewReturn(s, k, rng) {
+  const { zone } = s.crew[k];
+  delete s.crew[k];
+  const table = lootTable(s, zone).filter((x) => DISPATCH_KINDS.has(x.kind));
+  const haul = [];
+  let shark = false;
+  for (let i = 0; i < dispatchSize(s, k, zone); i++) {
+    const kind = pickWeighted(rng, table).kind;
+    if (kind === 'shark') shark = true;
+    else if (kind === 'letter') { s.flags.letters = (s.flags.letters || 0) + 1; haul.push('漂流瓶'); }
+    else haul.push(applyLoot(s, kind, rng, zone));
+  }
+  addBond(s, k);
+  s.returns.push({ npc: k, zone, haul, shark });
+  flushStory(s);
+}
+function crewTick(s, dt, rng) {
+  for (const k of Object.keys(s.crew)) {
+    s.crew[k].left -= dt;
+    if (s.crew[k].left <= 0) crewReturn(s, k, rng);
+  }
+}
+function returnOverlay(r) {
+  return {
+    kind: 'crew', npc: r.npc, zone: r.zone, haul: r.haul, title: `${NPC[r.npc]}回来了`,
+    lines: [`「${r.shark ? '遇到巨鲨，丢了一件。' : CREW[r.npc].back}」`, `${ZONES[r.zone].label}：${r.haul.join('  ') || '空手而归'}`],
+    say: 0, action: '确认 · 收下',
+  };
+}
+
+// 聊聊：今晚危险时先提醒，否则按次数轮换台词；每天第一次聊 +1 好感
+export function talk(s, k) {
+  if (!s.npc[k] || !CREW[k]) return false;
+  if (s.crew[k]) { s.ui.msg = `${NPC[k]}还在海上。`; return false; }
+  const c = CREW[k];
+  const nd = nextDanger(s);
+  const n = s.flags[`talk_${k}`] || 0;
+  const line = nd && nd.in === 0 && (nd.kind === 'pirate' || nd.dmg > 0) ? c.warn : c.lines[n % c.lines.length];
+  s.flags[`talk_${k}`] = n + 1;
+  if (s.flags[`talked_${k}`] !== s.day) { s.flags[`talked_${k}`] = s.day; addBond(s, k); }
+  s.ui.overlay = { kind: 'talk', npc: k, title: NPC[k], lines: [`「${line}」`, `好感 ${hearts(bondOf(s, k))}`], say: 0, action: '确认 · 回去干活' };
+  return true;
+}
+
+// 交给大模型的提示：人设 + 当前局面 + 这次要说什么。只要台词，不让它决定任何数值
+export function talkPrompt(s, o) {
+  const c = CREW[o.npc];
+  const nd = nextDanger(s);
+  const night = !nd ? '三晚内平静' : nd.kind === 'pirate' ? `${nd.in ? nd.in + '晚后' : '今晚'}海盗` : `${nd.in ? nd.in + '晚后' : '今晚'}风暴潮`;
+  const system = `你是末世漂流游戏《潮汐方舟》里的居民「${NPC[o.npc]}」：${c.persona}。` +
+    '用中文、第一人称、口语，只说一句话，不超过16个字，不要旁白、不要引号、不要表情。';
+  const state = `第${s.day}天，庇护所耐久${Math.round(s.hp)}，淡水${Math.floor(s.res.water)}，${night}。`;
+  const ask = o.kind === 'crew'
+    ? `你刚从${ZONES[o.zone].label}回来，带回：${o.haul.join('、') || '什么都没有'}。向船长汇报一句。`
+    : `船长来找你闲聊，你们的好感是${bondOf(s, o.npc)}/${BOND_MAX}。说一句符合你性格、和眼下处境有关的话。`;
+  return { system, user: state + ask, voice: c.voice, fallback: o.lines[o.say] };
+}
+// 眼镜弹窗一行放得下的长度
+export const clipLine = (t) => {
+  const s = String(t).replace(/[「」"“”\n]/g, '').trim();
+  return s.length > 16 ? s.slice(0, 15) + '…' : s;
+};
 function rescue(s, k) {
   s.npc[k] = true;
   beat(s, `${k}_found`);
@@ -354,9 +466,10 @@ export const tradesOf = (s) => [0, 1, 2].map((i) => (s.day + i) % TRADES.length)
 const tradeUsed = (s, i) => !!(s.trade && s.trade.day === s.day && s.trade.used[i]);
 
 // 从子界面返回时，主界面焦点回到对应项
-const SCREEN_ITEM = { build: 'build', chests: 'chests', trade: 'trader', zones: 'salvage' };
+const SCREEN_ITEM = { build: 'build', chests: 'chests', trade: 'trader', zones: 'salvage', crew: 'crew' };
 function homeMenu(s) {
   const list = ['salvage', 'build', 'chests', 'repair'];
+  if (residents(s) > 0) list.splice(3, 0, 'crew');
   if (traderDay(s, s.day)) list.push('trader');
   return list;
 }
@@ -379,12 +492,13 @@ export const BUILD_ROWS = 4; // 建造列表一屏最多 4 行，超出滚动
 const ART_BASE = '../../assets/art/';
 const ART_SET = new Set(ART);
 const LOOT_ART = { scrap: 'salvage-04', bottle: 'salvage-07', part: 'salvage-01', chest: 'chest-wood-closed', eel: 'char-24', weed: 'salvage-08', blueprint: 'lore-02', shark: 'lore-03', jelly: 'lore-05', letter: 'salvage-18' };
-const HOME_ART = { salvage: 'icon-08', build: 'icon-06', chests: 'icon-10', repair: 'icon-07', trader: 'npc-10' };
+const HOME_ART = { salvage: 'icon-08', build: 'icon-06', chests: 'icon-10', repair: 'icon-07', trader: 'npc-10', crew: 'npc-02' };
 const ZONE_ART = { near: 'icon-08', wreck: ['place-03', 'turtle-lv1-front'], sunken: ['place-01', 'turtle-lv2-front'], lab: ['place-02', 'place-01'] };
 function overlayArt(o) {
   if (o.kind === 'choice') return art(['npc-06', 'lore-01', 'story-10']);
   if (o.kind === 'raid') return art(['npc-05', 'place-04', 'event-04']);
   if (o.kind === 'over') return art('story-07');
+  if (o.kind === 'crew' || o.kind === 'talk') return art(CREW[o.npc].art);
   if (o.kind === 'story') return art(storyOf(o.id).art);
   return art(o.storm ? 'event-04' : 'event-10');
 }
@@ -437,6 +551,9 @@ export function newGame() {
     ending: null, // 'broadcast' | 'deal'：结局后进入自由模式
     seen: {}, // 已触发的剧情节点
     queue: [], // 待弹出的剧情节点
+    crew: {}, // 派遣中的居民 { k: { zone, left } }
+    bond: {}, // 居民好感 0–5
+    returns: [], // 已归来、待弹出汇报的派遣
     ui: freshUi('漂流第一天。先出海打捞些废料吧。'),
   };
 }
@@ -461,6 +578,7 @@ export function restore(saved) {
     ...fresh, ...saved,
     lv: { ...fresh.lv, ...saved.lv },
     npc: { ...saved.npc }, flags: { ...saved.flags }, seen: { ...saved.seen }, queue: [...(saved.queue || [])],
+    crew: { ...saved.crew }, bond: { ...saved.bond }, returns: [...(saved.returns || [])],
   };
   if (saved.chapter == null) migrateV01(s);
   s.v = SAVE_VERSION;
@@ -607,9 +725,10 @@ export function isPaused(s) {
   return !!s.ui.overlay || s.over;
 }
 
-export function tick(s, dt) {
+export function tick(s, dt, rng = Math.random) {
   if (isPaused(s)) return;
   s.cooldown = Math.max(0, s.cooldown - dt);
+  crewTick(s, dt, rng);
   const c = caps(s);
   const r = rates(s);
   s.res.power = Math.min(c.power, s.res.power + r.gen * dt);
@@ -880,11 +999,11 @@ function addWater(s, n) {
   return Math.round(s.res.water - before);
 }
 
-function applyLoot(s, kind, rng) {
+function applyLoot(s, kind, rng, zone = zoneNow(s)) {
   switch (kind) {
     case 'scrap': {
       // 远海的废料块更大：残骸带 +3，沉城 +5
-      const n = randInt(rng, 2, 4) + Math.floor(s.day / 3) + ({ wreck: 3, sunken: 5 }[zoneNow(s)] || 0);
+      const n = randInt(rng, 2, 4) + Math.floor(s.day / 3) + ({ wreck: 3, sunken: 5 }[zone] || 0);
       s.res.scrap += n;
       return `${SYM.scrap}+${n}`;
     }
@@ -903,7 +1022,7 @@ function applyLoot(s, kind, rng) {
     case 'chest': {
       const r = rng();
       // 沉城只有铁箱和金箱
-      const k = zoneNow(s) === 'sunken' ? (r < 0.75 ? 'iron' : 'gold') : r < 0.7 ? 'wood' : r < 0.95 ? 'iron' : 'gold';
+      const k = zone === 'sunken' ? (r < 0.75 ? 'iron' : 'gold') : r < 0.7 ? 'wood' : r < 0.95 ? 'iron' : 'gold';
       s.chests.push(k);
       return `${CHEST[k].label}+1`;
     }
@@ -1013,6 +1132,7 @@ function handleKey(s, key, rng) {
     if (ui.screen === 'home') return false;
     if (ui.screen === 'salvage') { finishSalvage(s); return true; }
     if (ui.chest && !ui.chest.reward) { ui.chest = null; return true; }
+    if (ui.screen === 'mate') { ui.screen = 'crew'; ui.focus = Math.max(0, crewOf(s).indexOf(ui.mate)); return true; }
     ui.chest = null;
     const from = ui.screen;
     ui.screen = 'home';
@@ -1032,6 +1152,18 @@ function handleKey(s, key, rng) {
       else if (item === 'chests') { ui.screen = 'chests'; ui.focus = 0; ui.chest = null; }
       else if (item === 'repair') repair(s);
       else if (item === 'trader') { ui.screen = 'trade'; ui.focus = 0; }
+      else if (item === 'crew') { ui.screen = 'crew'; ui.focus = 0; }
+      return true;
+    }
+    case 'crew': {
+      const k = crewOf(s)[ui.focus];
+      if (k) { ui.mate = k; ui.screen = 'mate'; ui.focus = 0; }
+      return true;
+    }
+    case 'mate': {
+      const act = mateMenu(s)[ui.focus];
+      if (act === 'talk') talk(s, ui.mate);
+      else if (dispatch(s, ui.mate, act)) { ui.screen = 'crew'; ui.focus = Math.max(0, crewOf(s).indexOf(ui.mate)); }
       return true;
     }
     case 'zones': {
@@ -1065,6 +1197,8 @@ function menuLength(s) {
     case 'zones': return zonesOf(s).length;
     case 'trade': return 3;
     case 'chests': return s.chests.length;
+    case 'crew': return crewOf(s).length;
+    case 'mate': return mateMenu(s).length;
     default: return 0;
   }
 }
@@ -1111,7 +1245,7 @@ export function view(s) {
     stormDanger: danger,
     moreUp: false,
     moreDown: false,
-    list: ui.screen === 'build' || ui.screen === 'trade' || ui.screen === 'zones',
+    list: ['build', 'trade', 'zones', 'crew', 'mate'].includes(ui.screen),
     residents: residents(s),
     goal: null,
     prodText: `${SYM.water}${rate(waterRate)}/s  ${SYM.power}${rate(r.gen - (powered ? r.need : 0))}/s`,
@@ -1140,8 +1274,10 @@ export function view(s) {
       chests: { label: '宝箱', sub: s.chests.length ? `×${s.chests.length}` : '无', off: s.chests.length === 0 },
       repair: { label: '修补庇护所', sub: `${SYM.scrap}${REPAIR_COST} → +${REPAIR_HP}`, off: s.hp >= HP_MAX || s.res.scrap < REPAIR_COST },
       trader: { label: '秤砣', sub: '今天在', off: false },
+      crew: { label: '居民', sub: crewSub(s), off: false },
     };
     vm.menu = homeMenu(s).map((k) => ({ ...items[k], art: art(HOME_ART[k]) }));
+    vm.tight = vm.menu.length > 5; // 居民 + 秤砣同时出现时压低行高
   } else if (ui.screen === 'build') {
     vm.title = '建造与升级';
     const desc = {
@@ -1189,6 +1325,33 @@ export function view(s) {
         state: used ? '已换' : ok ? '可换' : '缺料', off: !ok,
       };
     });
+  } else if (ui.screen === 'crew') {
+    vm.title = `居民 ×${residents(s)} · 派遣与聊天`;
+    vm.menu = crewOf(s).map((k) => {
+      const away = s.crew[k];
+      return {
+        art: art(CREW[k].art), artDim: !!away, label: NPC[k],
+        sub: `擅长${ZONES[CREW[k].zone].label}` + (s.flags[`talked_${k}`] === s.day ? '' : ' · 想聊聊'),
+        cost: hearts(bondOf(s, k)),
+        state: away ? `${ZONES[away.zone].label} ${Math.ceil(away.left)}s` : '空闲', off: !!away,
+      };
+    });
+  } else if (ui.screen === 'mate') {
+    const k = ui.mate;
+    const away = s.crew[k];
+    vm.title = `${NPC[k]} · 好感 ${hearts(bondOf(s, k))}`;
+    vm.menu = mateMenu(s).map((z) => {
+      if (z === 'talk') {
+        const talked = s.flags[`talked_${k}`] === s.day;
+        return { art: art(CREW[k].art), artDim: false, label: '聊聊', sub: talked ? '今天聊过了' : '每天第一次 · 好感 +1', cost: '', state: away ? '出海中' : talked ? '聊过' : '可聊', off: !!away };
+      }
+      const ok = !away && s.res.water >= DISPATCH_WATER;
+      return {
+        art: art(ZONE_ART[z]), artDim: false, label: `派遣 · ${ZONES[z].label}`,
+        sub: `${DISPATCH_SECS}s 后带回 ${dispatchSize(s, k, z)} 件` + (CREW[k].zone === z ? ' · 擅长' : ''),
+        cost: `${SYM.water}${DISPATCH_WATER}`, state: away ? '出海中' : ok ? '可派' : '缺水', off: !ok,
+      };
+    });
   } else if (ui.screen === 'chests') {
     vm.title = `宝箱 ×${s.chests.length}`;
     vm.menu = s.chests.map((k) => ({ art: art(`chest-${k}-closed`), label: CHEST[k].label, sub: `${CHEST[k].locks} 道锁`, off: false }));
@@ -1225,6 +1388,10 @@ export function view(s) {
   return vm;
 }
 
+function crewSub(s) {
+  const away = Object.keys(s.crew).length;
+  return away ? `${away} 人出海` : `${residents(s)} 人在船`;
+}
 function anyUpgradable(s) {
   return buildMenu(s).some((k) => affordable(s, costOf(s, k)));
 }

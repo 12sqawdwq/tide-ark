@@ -10,12 +10,14 @@
 ## 交互
 
 - 镜腿前后滑（ArrowUp / ArrowDown）移动焦点，单击（Enter）确认、落钩、撬锁，返回（Backspace）回上一级；在主界面返回则交还系统关闭。
-- 不使用麦克风、相机、定位或网络。
+- 居民：派遣居民替你出海（收获由游戏规则决定），或找居民聊聊。
+- 不使用麦克风、相机、定位。
 
 ## 能力与数据
 
 - 仅使用本地存储 `wx.setStorageSync / getStorageSync` 保存进度（键 `tideark.save.v1`）。
-- 无需任何 `permissions`。
+- 可选：居民台词在 `LanguageModel.availability()` 为 `available` 时由大模型改写一句，并用 `speechSynthesis` 以居民音色播报；不可用时使用写好的台词，游戏完全离线可玩。大模型只负责说话，不改任何数值。
+- 暂未声明 `permissions`。文档未写明 LLM / TTS 是否需要 `INTERNET`，真机验证后按需补上；语音输入（`RECORD_AUDIO`）尚未使用。
 
 ## 代码结构
 

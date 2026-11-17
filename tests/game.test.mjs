@@ -613,3 +613,132 @@ test('saves are v2; v0.1 saves infer the chapter from levels', () => {
   assert.equal(s.ui.overlay, null, 'nothing replays');
   assert.equal('won' in s, false);
 });
+
+// ---------- 居民派遣与聊天 ----------
+const crewGame = () => { const s = G.newGame(); s.npc.rivet = true; s.res.water = 10; return s; };
+
+test('crew: home shows 居民 once someone lives aboard; enter → list → resident page', () => {
+  const s = G.newGame();
+  assert.ok(!G.view(s).menu.some((m) => m.label === '居民'));
+  s.npc.rivet = true;
+  const idx = G.view(s).menu.findIndex((m) => m.label === '居民');
+  assert.equal(idx, 3, 'before 修补');
+  s.ui.focus = idx;
+  G.press(s, 'enter');
+  assert.equal(s.ui.screen, 'crew');
+  assert.equal(G.view(s).menu[0].label, '铆钉');
+  G.press(s, 'enter');
+  assert.equal(s.ui.screen, 'mate');
+  const vm = G.view(s);
+  assert.deepEqual(vm.menu.map((m) => m.label), ['派遣 · 近海', '聊聊']);
+  G.press(s, 'back');
+  assert.equal(s.ui.screen, 'crew');
+  G.press(s, 'back');
+  assert.equal(s.ui.screen, 'home');
+  assert.equal(s.ui.focus, idx, 'focus returns to 居民');
+});
+
+test('crew: dispatch costs water, returns after DISPATCH_SECS with loot and a report', () => {
+  const s = crewGame();
+  s.ui.screen = 'mate'; s.ui.mate = 'rivet'; s.ui.focus = 0;
+  G.press(s, 'enter');
+  assert.equal(s.res.water, 10 - G.DISPATCH_WATER);
+  assert.ok(s.crew.rivet);
+  assert.equal(s.ui.screen, 'crew');
+  assert.equal(G.dispatch(s, 'rivet', 'near'), false, 'already away');
+  const scrap = s.res.scrap;
+  G.tick(s, G.DISPATCH_SECS - 1, () => 0);
+  assert.ok(s.crew.rivet, 'not back yet');
+  G.tick(s, 1, () => 0); // rng 0 → scrap
+  assert.ok(!s.crew.rivet);
+  assert.ok(s.res.scrap > scrap);
+  assert.equal(s.ui.overlay.kind, 'crew');
+  assert.equal(s.ui.overlay.haul.length, 2);
+  assert.equal(s.bond.rivet, 1);
+});
+
+test('crew: no water, no dispatch', () => {
+  const s = crewGame(); s.res.water = 1;
+  assert.equal(G.dispatch(s, 'rivet', 'near'), false);
+  assert.match(s.ui.msg, /口粮不够/);
+});
+
+test('crew: specialty zone and bond ≥3 each add one item', () => {
+  const s = crewGame();
+  assert.equal(G.dispatchSize(s, 'rivet', 'near'), 2);
+  assert.equal(G.dispatchSize(s, 'rivet', 'wreck'), 3);
+  s.bond.rivet = 3;
+  assert.equal(G.dispatchSize(s, 'rivet', 'wreck'), 4);
+});
+
+test('crew: a shark costs one item', () => {
+  const s = crewGame(); s.lv.turtle = 1; s.chapter = 5;
+  assert.ok(G.zonesOf(s).includes('wreck'));
+  G.dispatch(s, 'rivet', 'wreck');
+  G.tick(s, G.DISPATCH_SECS, () => 0.999); // last entry in the wreck table → shark
+  const o = s.ui.overlay;
+  assert.equal(o.kind, 'crew');
+  assert.ok(o.lines[0].includes('巨鲨'));
+  assert.ok(o.haul.length < G.dispatchSize(s, 'rivet', 'wreck'));
+});
+
+test('crew: return report waits for salvage and story overlays', () => {
+  const s = crewGame();
+  G.dispatch(s, 'rivet', 'near');
+  assert.ok(G.startSalvage(s, () => 0));
+  s.crew.rivet.left = 0.01;
+  G.tick(s, 1, () => 0);
+  assert.equal(s.ui.overlay, null, 'not mid-salvage');
+  assert.equal(s.returns.length, 1);
+  while (s.ui.salvage) G.press(s, s.ui.salvage.done ? 'enter' : 'back');
+  while (s.ui.overlay && s.ui.overlay.kind !== 'crew') G.press(s, 'enter');
+  assert.equal(s.ui.overlay.kind, 'crew');
+  G.press(s, 'enter');
+  assert.equal(s.ui.overlay, null);
+});
+
+test('crew: talk rotates lines, bond +1 once per day, warns on a dangerous night', () => {
+  const s = crewGame();
+  G.talk(s, 'rivet');
+  assert.equal(s.ui.overlay.kind, 'talk');
+  assert.equal(s.ui.overlay.lines[0], `「${G.CREW.rivet.lines[0]}」`);
+  assert.equal(s.bond.rivet, 1);
+  s.ui.overlay = null;
+  G.talk(s, 'rivet');
+  assert.equal(s.ui.overlay.lines[0], `「${G.CREW.rivet.lines[1]}」`);
+  assert.equal(s.bond.rivet, 1, 'same day');
+  s.ui.overlay = null;
+  s.chapter = G.STORM_CHAPTER; s.day = 3; s.lv.shelter = 1;
+  G.talk(s, 'rivet');
+  assert.equal(s.ui.overlay.lines[0], `「${G.CREW.rivet.warn}」`);
+  assert.equal(s.bond.rivet, 2, 'new day');
+});
+
+test('crew: away residents cannot talk', () => {
+  const s = crewGame();
+  G.dispatch(s, 'rivet', 'near');
+  assert.equal(G.talk(s, 'rivet'), false);
+});
+
+test('crew: save round trip keeps crew, bond and pending returns', () => {
+  const s = crewGame();
+  G.dispatch(s, 'rivet', 'near');
+  s.bond.rivet = 2;
+  s.returns.push({ npc: 'rivet', zone: 'near', haul: ['废料+3'], shark: false });
+  const r = G.restore(JSON.parse(JSON.stringify(G.serialize(s))));
+  assert.equal(r.crew.rivet.zone, 'near');
+  assert.equal(r.bond.rivet, 2);
+  assert.equal(r.ui.overlay.kind, 'crew', 'pending report shows on load');
+  assert.equal(r.returns.length, 0);
+});
+
+test('crew: LLM prompt carries persona and state, the model only supplies words', () => {
+  const s = crewGame();
+  G.talk(s, 'rivet');
+  const p = G.talkPrompt(s, s.ui.overlay);
+  assert.ok(p.system.includes(G.CREW.rivet.persona));
+  assert.ok(p.user.includes('第1天'));
+  assert.equal(p.voice, 'male-qn-qingse');
+  assert.equal(p.fallback, s.ui.overlay.lines[0]);
+  assert.equal(G.clipLine('「一二三四五六七八九十一二三四五六七」'), '一二三四五六七八九十一二三四五…');
+});

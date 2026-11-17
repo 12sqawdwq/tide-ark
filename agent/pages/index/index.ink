@@ -108,6 +108,56 @@ export default {
   render() {
     this.setData({ vm: G.view(this.state) });
     this.syncSalvageLoop();
+    this.voice();
+  },
+
+  // ---------- 居民说话（可选：LanguageModel 改写台词 + TTS 播报） ----------
+  // 台词先显示写好的版本；大模型可用时流式替换成一句新的，再用居民音色读出来。
+  // 任何一步不可用（预览、没网、配额用完）都静默退回固定台词。
+  voice() {
+    const o = this.state && this.state.ui.overlay;
+    if (!o || (o.kind !== 'crew' && o.kind !== 'talk') || o.voiced) return;
+    o.voiced = true;
+    const p = G.talkPrompt(this.state, o);
+    this.rewrite(o, p).then((text) => this.speak(text, p.voice));
+  },
+
+  async rewrite(o, p) {
+    let text = G.clipLine(p.fallback);
+    try {
+      const LM = globalThis.LanguageModel;
+      if (!LM || (await LM.availability()) !== 'available') return text;
+      const session = await LM.create({ initialPrompts: [{ role: 'system', content: p.system }] });
+      let out = '';
+      try {
+        for await (const chunk of session.promptStreaming(p.user)) {
+          // 有的实现给增量，有的给累计全文
+          out = chunk.startsWith(out) ? chunk : out + chunk;
+          if (this.state.ui.overlay !== o) break;
+          o.lines[o.say] = `「${G.clipLine(out)}」`;
+          this.setData({ vm: G.view(this.state) });
+        }
+      } finally {
+        session.destroy();
+      }
+      if (G.clipLine(out)) text = G.clipLine(out);
+      else o.lines[o.say] = `「${text}」`;
+    } catch (err) {
+      console.warn('[tideark] llm unavailable', err);
+      o.lines[o.say] = `「${text}」`;
+    }
+    return text;
+  },
+
+  speak(text, voiceId) {
+    try {
+      if (!globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.voice = voiceId; // AIUI：音色 ID 字符串；桌面浏览器会抛错，正好跳过
+      speechSynthesis.speak(u, 'immediate');
+    } catch (err) {
+      console.warn('[tideark] tts unavailable', err);
+    }
   },
 
   // ---------- input ----------
@@ -175,7 +225,7 @@ export default {
         <text class="caption">{{vm.powerText}}</text>
         <text class="caption" ink:if="{{vm.residents}}">居民 {{vm.residents}}</text>
       </view>
-      <view class="menu">
+      <view class="menu {{vm.tight ? 'menu-tight' : ''}}">
         <view class="goal" ink:if="{{vm.goal}}">
           <view class="goal-head">
             <text class="goal-ch">{{vm.goal.chapter}}</text>
@@ -333,6 +383,9 @@ export default {
   min-height: 34px; padding: 0 8px; box-sizing: border-box;
   border: 1px solid transparent; border-radius: 4px;
 }
+.menu-tight { gap: 2px; }
+.menu-tight .row { min-height: 26px; }
+.menu-tight .row-art { width: 22px; height: 22px; }
 .row-focus { background-color: var(--g12); border-color: var(--g72); }
 .row-off .row-label { color: var(--g48); }
 .row-mark { width: 10px; font-size: 14px; color: var(--g100); }
