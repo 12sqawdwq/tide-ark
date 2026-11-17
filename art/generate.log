@@ -195,3 +195,15 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 2026-11-16T18:19:12.115Z OK   sheet-17 (66s, exit 0)
 2026-11-16T18:19:29.594Z CROP sheet-16 1254x1254 网格线 x3/y3 → 16 张
 2026-11-16T18:19:29.720Z CROP sheet-17 1254x1254 网格线 x3/y3 → 4 张
+2026-11-17T07:16:04.030Z OK   portrait rivet 铆钉 (68s, exit 0)
+2026-11-17T07:17:26.521Z OK   portrait hero 你（老潮） (59s, exit 0)
+2026-11-17T07:17:27.829Z OK   portrait pot 小锅 (60s, exit 0)
+2026-11-17T07:17:42.898Z OK   portrait coral 珊瑚 (75s, exit 0)
+2026-11-17T07:18:13.880Z OK   portrait beam 铁梁 (47s, exit 0)
+2026-11-17T07:18:49.903Z OK   portrait hawk 灯塔叔 (67s, exit 0)
+2026-11-17T07:19:09.651Z OK   portrait trader 秤砣 (101s, exit 0)
+2026-11-17T07:19:19.153Z OK   portrait rust 锈锚 (65s, exit 0)
+2026-11-17T07:19:59.385Z OK   portrait lin 林博士 (49s, exit 0)
+2026-11-17T07:20:12.492Z OK   portrait tide 潮生 (53s, exit 0)
+2026-11-17T07:20:56.017Z OK   portrait sand 白砂 (56s, exit 0)
+2026-11-17T07:21:18.268Z OK   portrait bubble 气泡 (148s, exit 0)
